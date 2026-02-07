@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>クリニック予約システム デモ | Treasure Planning LLC</title>
+<meta name="description" content="既存HPを壊さずWeb予約システムを導入。クリニック・病院専用の予約ウィジェットデモ。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif;
+    background: linear-gradient(180deg, #0d1b2a 0%, #1b2d4a 100%);
+    min-height: 100vh;
+    color: #333;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font-family: inherit; cursor: pointer; }
+  button:hover { opacity: 0.92; }
+  input, textarea { font-family: inherit; }
+  input:focus, textarea:focus { border-color: #1a73e8 !important; box-shadow: 0 0 0 3px rgba(26,115,232,0.15); outline: none; }
+
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(40px) } to { opacity: 1; transform: translateY(0) } }
+  @keyframes scaleIn { from { transform: scale(0); opacity: 0 } to { transform: scale(1); opacity: 1 } }
+  @keyframes spin { to { transform: rotate(360deg) } }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 4px 20px rgba(26,115,232,0.4) }
+    50% { box-shadow: 0 4px 30px rgba(26,115,232,0.7) }
+  }
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(20px) }
+    to { opacity: 1; transform: translateY(0) }
+  }
+
+  .hero { text-align: center; padding: 48px 20px 32px; }
+  .hero-badge {
+    display: inline-block; background: linear-gradient(135deg, #1a73e8, #4a9af5);
+    color: #fff; font-size: 12px; font-weight: 700; padding: 6px 20px;
+    border-radius: 20px; margin-bottom: 16px; letter-spacing: 1px;
+  }
+  .hero h1 { color: #fff; font-size: 28px; font-weight: 800; line-height: 1.4; }
+  .hero h1 span { color: #4ecdc4; }
+  .hero p { color: rgba(255,255,255,0.6); font-size: 14px; margin-top: 8px; }
+
+  .tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 24px; padding: 0 20px; }
+  .tab-btn {
+    background: rgba(255,255,255,0.05); border: 1.5px solid transparent;
+    border-radius: 12px; padding: 12px 24px; text-align: center; transition: all 0.2s;
+  }
+  .tab-btn.active { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); }
+  .tab-btn .label { font-size: 14px; font-weight: 700; color: #fff; }
+  .tab-btn .desc { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+  .content-area { padding: 0 20px 48px; max-width: 960px; margin: 0 auto; }
+  .hint-bar {
+    background: rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 16px;
+    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: rgba(255,255,255,0.7);
+  }
+
+  /* Clinic HP Preview */
+  .clinic-hp { background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.12); }
+  .clinic-header {
+    background: linear-gradient(135deg, #1a5c3a, #2d8a5e); padding: 28px 32px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+  }
+  .clinic-header .name { color: #fff; font-size: 22px; font-weight: 800; letter-spacing: 1px; }
+  .clinic-header .sub { color: rgba(255,255,255,0.8); font-size: 13px; margin-top: 4px; }
+  .clinic-header nav { display: flex; gap: 16px; font-size: 13px; color: rgba(255,255,255,0.9); }
+  .clinic-hero {
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9); padding: 48px 32px; text-align: center;
+  }
+  .clinic-hero h2 { font-size: 28px; font-weight: 800; color: #1b5e20; margin-bottom: 8px; }
+  .clinic-hero .hours { font-size: 14px; color: #4a7c59; margin-bottom: 24px; }
+  .reserve-btn {
+    background: linear-gradient(135deg, #1a73e8, #4a9af5); color: #fff; border: none;
+    border-radius: 50px; padding: 16px 48px; font-size: 17px; font-weight: 700;
+    box-shadow: 0 4px 20px rgba(26,115,232,0.4); animation: pulse 2s ease-in-out infinite;
+    transition: all 0.3s;
+  }
+  .reserve-btn-note { font-size: 11px; color: #888; margin-top: 10px; }
+  .clinic-cards { padding: 32px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .clinic-card {
+    background: #f8faf8; border-radius: 12px; padding: 24px 20px; text-align: center;
+  }
+  .clinic-card .icon { font-size: 28px; margin-bottom: 8px; }
+  .clinic-card .title { font-size: 14px; font-weight: 700; color: #333; }
+  .clinic-card .link { font-size: 11px; color: #999; margin-top: 6px; }
+  .clinic-footer {
+    background: #f5f5f5; padding: 16px 32px; font-size: 11px; color: #999; text-align: center;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center; z-index: 9999;
+    animation: fadeIn 0.3s ease;
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal {
+    background: #fff; border-radius: 20px; width: 95%; max-width: 520px;
+    max-height: 92vh; overflow: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .modal-header {
+    background: linear-gradient(135deg, #1a73e8, #4a9af5); padding: 20px 24px;
+    border-radius: 20px 20px 0 0; display: flex; justify-content: space-between;
+    align-items: center; position: sticky; top: 0; z-index: 10;
+  }
+  .modal-header .title { color: #fff; font-size: 16px; font-weight: 700; }
+  .modal-header .step-label { color: rgba(255,255,255,0.8); font-size: 12px; margin-top: 2px; }
+  .close-btn {
+    background: rgba(255,255,255,0.2); border: none; border-radius: 50%;
+    width: 36px; height: 36px; font-size: 18px; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .progress { padding: 16px 24px 0; display: flex; gap: 4px; }
+  .progress-bar { flex: 1; height: 4px; border-radius: 2px; background: #e0e0e0; transition: background 0.4s; }
+  .progress-bar.active { background: #1a73e8; }
+  .modal-body { padding: 20px 24px 28px; }
+
+  /* Dept grid */
+  .dept-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .dept-btn {
+    background: #f8f9fa; border: 2px solid transparent; border-radius: 14px;
+    padding: 24px 16px; text-align: center; transition: all 0.2s;
+  }
+  .dept-btn:hover { background: #e8f0fe; border-color: #1a73e8; }
+  .dept-btn .icon { font-size: 32px; margin-bottom: 8px; }
+  .dept-btn .name { font-size: 15px; font-weight: 700; color: #333; }
+  .dept-btn .dur { font-size: 11px; color: #999; margin-top: 4px; }
+
+  /* Calendar */
+  .cal-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .cal-nav button {
+    background: #f0f0f0; border: none; border-radius: 8px;
+    padding: 8px 16px; font-size: 14px; font-weight: 600;
+  }
+  .cal-nav .month { font-size: 17px; font-weight: 700; color: #333; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-header {
+    text-align: center; font-size: 12px; font-weight: 700; padding: 8px 0;
+  }
+  .cal-header.sun { color: #e53e3e; }
+  .cal-header.sat { color: #3182ce; }
+  .cal-day {
+    background: #f0f7ff; border: none; border-radius: 10px; padding: 10px 0;
+    font-size: 14px; font-weight: 600; text-align: center; transition: all 0.15s;
+  }
+  .cal-day:disabled { background: #f9f9f9; color: #ccc; cursor: default; }
+  .cal-day .dot { font-size: 8px; color: #1a73e8; margin-top: 2px; }
+  .cal-legend {
+    margin-top: 16px; padding: 10px 14px; background: #f8f9fa;
+    border-radius: 8px; font-size: 12px; color: #888;
+    display: flex; gap: 16px; justify-content: center;
+  }
+  .back-link {
+    margin-top: 12px; background: none; border: none;
+    color: #1a73e8; font-size: 13px;
+  }
+
+  /* Time slots */
+  .selected-info {
+    background: #f0f7ff; border-radius: 12px; padding: 14px 16px;
+    margin-bottom: 20px; display: flex; align-items: center; gap: 12px;
+  }
+  .selected-info .icon { font-size: 24px; }
+  .selected-info .date { font-size: 15px; font-weight: 700; color: #333; }
+  .selected-info .dept { font-size: 12px; color: #888; }
+  .time-label { font-size: 13px; font-weight: 600; color: #666; margin-bottom: 10px; }
+  .time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+  .time-btn {
+    background: #fff; color: #333; border: 1.5px solid #e0e0e0;
+    border-radius: 10px; padding: 12px; font-size: 15px; font-weight: 600;
+    transition: all 0.15s;
+  }
+  .time-btn:hover { border-color: #1a73e8; background: #f0f7ff; }
+
+  /* Form */
+  .booking-summary {
+    background: #f0f7ff; border-radius: 12px; padding: 14px 16px; margin-bottom: 20px;
+  }
+  .booking-summary .label { font-size: 13px; color: #888; margin-bottom: 6px; }
+  .booking-summary .details { display: flex; gap: 20px; font-size: 14px; font-weight: 600; color: #333; }
+  .booking-summary .dept-info { font-size: 13px; color: #666; margin-top: 4px; }
+  .no-account-note {
+    font-size: 12px; color: #e53e3e; margin-bottom: 16px;
+    padding: 8px 12px; background: #fff5f5; border-radius: 8px;
+  }
+  .form-group { margin-bottom: 16px; }
+  .form-group label {
+    display: block; font-size: 13px; font-weight: 600; color: #444; margin-bottom: 6px;
+  }
+  .form-group .required { color: #e53e3e; margin-left: 4px; }
+  .form-group input, .form-group textarea {
+    width: 100%; padding: 12px 14px; border: 1.5px solid #e0e0e0;
+    border-radius: 10px; font-size: 15px;
+  }
+  .form-group textarea { resize: vertical; }
+  .submit-btn {
+    width: 100%; background: linear-gradient(135deg, #1a73e8, #4a9af5);
+    color: #fff; border: none; border-radius: 12px; padding: 16px;
+    font-size: 16px; font-weight: 700; margin-top: 8px; transition: all 0.3s;
+  }
+  .submit-btn:disabled { background: #ccc; cursor: default; }
+  .submit-btn .loading { animation: spin 1s linear infinite; display: inline-block; }
+
+  /* Confirmation */
+  .confirm-page { text-align: center; padding: 20px 0; }
+  .confirm-check {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: linear-gradient(135deg, #34d399, #4ecdc4);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px; font-size: 40px; color: #fff;
+    animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .confirm-title { font-size: 22px; font-weight: 800; color: #333; margin-bottom: 8px; }
+  .confirm-email { font-size: 13px; color: #888; margin-bottom: 24px; }
+  .confirm-details {
+    background: #f8f9fa; border-radius: 14px; padding: 20px;
+    text-align: left; margin-bottom: 20px;
+  }
+  .confirm-details .header { font-size: 13px; font-weight: 700; color: #888; margin-bottom: 12px; }
+  .confirm-row {
+    display: flex; justify-content: space-between; padding: 8px 0;
+    border-bottom: 1px solid #eee; font-size: 14px;
+  }
+  .confirm-row .key { color: #888; }
+  .confirm-row .val { font-weight: 600; color: #333; }
+  .confirm-warning {
+    background: #fff5f5; border-radius: 10px; padding: 12px 16px;
+    font-size: 12px; color: #e53e3e; margin-bottom: 20px; text-align: left;
+  }
+  .confirm-close-btn {
+    background: linear-gradient(135deg, #1a73e8, #4a9af5);
+    color: #fff; border: none; border-radius: 12px;
+    padding: 14px 40px; font-size: 15px; font-weight: 700;
+  }
+
+  /* Admin */
+  .admin-panel { background: #f8f9fa; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.12); }
+  .admin-header {
+    background: #1a2b4a; padding: 16px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .admin-header .title { color: #fff; font-size: 15px; font-weight: 700; }
+  .admin-header .user { font-size: 12px; color: rgba(255,255,255,0.6); }
+  .admin-body { padding: 20px 24px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .stat-card { border-radius: 12px; padding: 16px; text-align: center; }
+  .stat-card .val { font-size: 24px; font-weight: 800; }
+  .stat-card .val span { font-size: 12px; font-weight: 500; }
+  .stat-card .label { font-size: 11px; color: #888; margin-top: 4px; }
+  .booking-table { background: #fff; border-radius: 12px; overflow: hidden; }
+  .booking-table .header {
+    padding: 14px 16px; border-bottom: 1px solid #eee;
+    font-size: 14px; font-weight: 700; color: #333;
+  }
+  .booking-table .row {
+    display: grid; grid-template-columns: 80px 90px 80px 80px 60px 70px;
+    padding: 10px 16px; align-items: center; font-size: 12px;
+  }
+  .booking-table .row-header {
+    background: #f8f9fa; font-weight: 600; color: #888; font-size: 11px;
+  }
+  .booking-table .row + .row { border-top: 1px solid #f0f0f0; }
+  .status-badge {
+    padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600;
+  }
+  .status-confirmed { background: #ecfdf5; color: #059669; }
+  .status-pending { background: #fffbeb; color: #d97706; }
+
+  .page-footer {
+    text-align: center; padding: 24px 20px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    font-size: 12px; color: rgba(255,255,255,0.4);
+  }
+
+  @media (max-width: 640px) {
+    .clinic-cards { grid-template-columns: 1fr; }
+    .clinic-header { flex-direction: column; text-align: center; }
+    .clinic-header nav { display: none; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .booking-table .row { grid-template-columns: 1fr 1fr 1fr; gap: 4px; font-size: 11px; }
+    .booking-table .row-header { display: none; }
+    .clinic-hero h2 { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-badge">DEMO</div>
+  <h1>クリニック予約システム<span> デモ</span></h1>
+  <p>既存HPにHTMLタグ数行で導入できる予約ウィジェット</p>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('patient')" id="tab-patient">
+    <div class="label">🏥 患者さん側の表示</div>
+    <div class="desc">HP埋め込みイメージ</div>
+  </button>
+  <button class="tab-btn" onclick="switchTab('admin')" id="tab-admin">
+    <div class="label">📊 管理画面</div>
+    <div class="desc">スタンダード以上</div>
+  </button>
+</div>
+
+<!-- Content -->
+<div class="content-area">
+
+  <!-- Patient View -->
+  <div id="view-patient">
+    <div class="hint-bar">💡 下のクリニックHPの「Web予約はこちら」ボタンをクリックしてみてください</div>
+    <div class="clinic-hp">
+      <div class="clinic-header">
+        <div>
+          <div class="name">🏥 みどりの丘クリニック</div>
+          <div class="sub">内科・消化器科・循環器科</div>
+        </div>
+        <nav><span>ホーム</span><span>診療案内</span><span>アクセス</span></nav>
+      </div>
+      <div class="clinic-hero">
+        <h2>地域の皆さまの健康をサポートします</h2>
+        <div class="hours">月〜土 9:00-12:00 / 14:00-18:00　水・日・祝 休診</div>
+        <button class="reserve-btn" onclick="openModal()">📅 Web予約はこちら</button>
+        <div class="reserve-btn-note">24時間いつでもご予約いただけます</div>
+      </div>
+      <div class="clinic-cards">
+        <div class="clinic-card"><div class="icon">🩺</div><div class="title">診療案内</div><div class="link">詳しくはこちら →</div></div>
+        <div class="clinic-card"><div class="icon">👨‍⚕️</div><div class="title">医師紹介</div><div class="link">詳しくはこちら →</div></div>
+        <div class="clinic-card"><div class="icon">📍</div><div class="title">アクセス</div><div class="link">詳しくはこちら →</div></div>
+      </div>
+      <div class="clinic-footer">© 2026 みどりの丘クリニック All Rights Reserved.</div>
+    </div>
+  </div>
+
+  <!-- Admin View -->
+  <div id="view-admin" style="display:none;">
+    <div class="hint-bar">💡 スタンダードプラン以上に含まれる管理画面のイメージです</div>
+    <div class="admin-panel">
+      <div class="admin-header">
+        <div class="title">📊 予約管理ダッシュボード</div>
+        <div class="user">管理者: clinic_admin</div>
+      </div>
+      <div class="admin-body">
+        <div class="stats-grid">
+          <div class="stat-card" style="background:#e8f0fe"><div class="val" style="color:#1a73e8">12<span>件</span></div><div class="label">本日の予約</div></div>
+          <div class="stat-card" style="background:#ecfdf5"><div class="val" style="color:#34d399">47<span>件</span></div><div class="label">今週の予約</div></div>
+          <div class="stat-card" style="background:#fffbeb"><div class="val" style="color:#f59e0b">3.2<span>%</span></div><div class="label">キャンセル率</div></div>
+          <div class="stat-card" style="background:#f5f3ff"><div class="val" style="color:#8b5cf6">8<span>人</span></div><div class="label">新規患者</div></div>
+        </div>
+        <div class="booking-table">
+          <div class="header">直近の予約一覧</div>
+          <div class="row row-header"><div>予約番号</div><div>患者名</div><div>診療科</div><div>日時</div><div>時間</div><div>状態</div></div>
+          <div class="row"><div style="color:#1a73e8;font-weight:600">R-384521</div><div style="font-weight:600">田中 花子</div><div style="color:#666">一般内科</div><div>2/10（月）</div><div>9:30</div><div><span class="status-badge status-confirmed">確定</span></div></div>
+          <div class="row"><div style="color:#1a73e8;font-weight:600">R-384522</div><div style="font-weight:600">佐藤 一郎</div><div style="color:#666">消化器科</div><div>2/10（月）</div><div>10:00</div><div><span class="status-badge status-confirmed">確定</span></div></div>
+          <div class="row"><div style="color:#1a73e8;font-weight:600">R-384523</div><div style="font-weight:600">鈴木 美咲</div><div style="color:#666">循環器科</div><div>2/10（月）</div><div>10:30</div><div><span class="status-badge status-pending">仮予約</span></div></div>
+          <div class="row"><div style="color:#1a73e8;font-weight:600">R-384524</div><div style="font-weight:600">高橋 健太</div><div style="color:#666">健康診断</div><div>2/10（月）</div><div>14:00</div><div><span class="status-badge status-confirmed">確定</span></div></div>
+          <div class="row"><div style="color:#1a73e8;font-weight:600">R-384525</div><div style="font-weight:600">山本 裕子</div><div style="color:#666">一般内科</div><div>2/11（火）</div><div>9:00</div><div><span class="status-badge status-confirmed">確定</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-footer">
+  ※ これはデモです。実際の予約は送信されません。<br>
+  Powered by Treasure Planning LLC
+</div>
+
+<!-- Reservation Modal -->
+<div class="modal-overlay hidden" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div>
+        <div class="title">🏥 みどりの丘クリニック</div>
+        <div class="step-label" id="step-label">診療科を選択</div>
+      </div>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="progress" id="progress-bar">
+      <div class="progress-bar active"></div>
+      <div class="progress-bar"></div>
+      <div class="progress-bar"></div>
+      <div class="progress-bar"></div>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const DEPTS = [
+  { id: "general", name: "一般内科", icon: "🩺", duration: 30 },
+  { id: "gastro", name: "消化器科", icon: "💊", duration: 30 },
+  { id: "cardio", name: "循環器科", icon: "❤️", duration: 45 },
+  { id: "checkup", name: "健康診断", icon: "📋", duration: 60 },
+];
+const TIMES = ["9:00","9:30","10:00","10:30","11:00","11:30","14:00","14:30","15:00","15:30","16:00","16:30","17:00"];
+const WDAYS = ["日","月","火","水","木","金","土"];
+
+let state = { step: 0, dept: null, date: null, time: null, form: { name:"", phone:"", email:"", symptoms:"" } };
+let calYear, calMonth;
+
+function initCal() {
+  const now = new Date(); calYear = now.getFullYear(); calMonth = now.getMonth();
+}
+initCal();
+
+function switchTab(tab) {
+  document.getElementById("view-patient").style.display = tab === "patient" ? "block" : "none";
+  document.getElementById("view-admin").style.display = tab === "admin" ? "block" : "none";
+  document.getElementById("tab-patient").className = "tab-btn" + (tab === "patient" ? " active" : "");
+  document.getElementById("tab-admin").className = "tab-btn" + (tab === "admin" ? " active" : "");
+}
+
+function openModal() {
+  state = { step: 0, dept: null, date: null, time: null, form: { name:"", phone:"", email:"", symptoms:"" } };
+  initCal();
+  document.getElementById("modal-overlay").classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+  renderStep();
+}
+function closeModal() {
+  document.getElementById("modal-overlay").classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+function renderStep() {
+  const labels = ["診療科を選択","日時を選択","時間帯を選択","患者情報の入力","予約完了"];
+  document.getElementById("step-label").textContent = labels[state.step];
+
+  // Progress
+  const bars = document.querySelectorAll(".progress-bar");
+  const progEl = document.getElementById("progress-bar");
+  if (state.step < 4) {
+    progEl.style.display = "flex";
+    bars.forEach((b, i) => b.className = "progress-bar" + (i <= state.step ? " active" : ""));
+  } else {
+    progEl.style.display = "none";
+  }
+
+  const body = document.getElementById("modal-body");
+
+  if (state.step === 0) renderDepts(body);
+  else if (state.step === 1) renderCalendar(body);
+  else if (state.step === 2) renderTimes(body);
+  else if (state.step === 3) renderForm(body);
+  else if (state.step === 4) renderConfirm(body);
+}
+
+function renderDepts(el) {
+  el.innerHTML = '<div class="dept-grid">' + DEPTS.map(d =>
+    `<button class="dept-btn" onclick="selectDept('${d.id}')">
+      <div class="icon">${d.icon}</div><div class="name">${d.name}</div><div class="dur">約${d.duration}分</div>
+    </button>`
+  ).join("") + '</div>';
+}
+
+function selectDept(id) { state.dept = id; state.step = 1; renderStep(); }
+
+function renderCalendar(el) {
+  const first = new Date(calYear, calMonth, 1).getDay();
+  const days = new Date(calYear, calMonth + 1, 0).getDate();
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  let html = `<div class="cal-nav">
+    <button onclick="prevMonth()">◀</button>
+    <div class="month">${calYear}年 ${calMonth+1}月</div>
+    <button onclick="nextMonth()">▶</button>
+  </div><div class="cal-grid">`;
+
+  WDAYS.forEach((w, i) => {
+    const cls = i === 0 ? " sun" : i === 6 ? " sat" : "";
+    html += `<div class="cal-header${cls}">${w}</div>`;
+  });
+
+  for (let i = 0; i < first; i++) html += '<div></div>';
+
+  for (let d = 1; d <= days; d++) {
+    const dt = new Date(calYear, calMonth, d);
+    const dow = dt.getDay();
+    const avail = dt > today && dow !== 0 && dow !== 3;
+    const color = !avail ? "#ccc" : dow === 0 ? "#e53e3e" : dow === 6 ? "#3182ce" : "#333";
+
+    if (avail) {
+      html += `<button class="cal-day" style="color:${color}" onclick="selectDate(${calYear},${calMonth},${d})">${d}<div class="dot">●</div></button>`;
+    } else {
+      html += `<button class="cal-day" disabled>${d}</button>`;
+    }
+  }
+
+  html += `</div>
+    <div class="cal-legend"><span>🔵 予約可能</span><span style="color:#ccc">● 休診日</span></div>
+    <button class="back-link" onclick="goStep(0)">← 診療科の選択に戻る</button>`;
+  el.innerHTML = html;
+}
+
+function prevMonth() {
+  calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderStep();
+}
+function nextMonth() {
+  calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderStep();
+}
+function selectDate(y, m, d) {
+  state.date = new Date(y, m, d); state.time = null; state.step = 2; renderStep();
+}
+
+function formatDate(d) {
+  if (!d) return "";
+  return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${WDAYS[d.getDay()]}）`;
+}
+
+function getSlots() {
+  if (!state.date || !state.dept) return [];
+  const seed = state.date.getDate() + state.dept.charCodeAt(0);
+  return TIMES.filter((_, i) => (seed + i * 7) % 5 !== 0);
+}
+
+function renderTimes(el) {
+  const dept = DEPTS.find(d => d.id === state.dept);
+  const slots = getSlots();
+  const am = slots.filter(s => parseInt(s) < 12);
+  const pm = slots.filter(s => parseInt(s) >= 12);
+
+  let html = `<div class="selected-info">
+    <span class="icon">📅</span>
+    <div><div class="date">${formatDate(state.date)}</div><div class="dept">${dept.name}</div></div>
+  </div>`;
+
+  html += '<div class="time-label">午前</div><div class="time-grid">';
+  am.forEach(s => { html += `<button class="time-btn" onclick="selectTime('${s}')">${s}</button>`; });
+  html += '</div><div class="time-label">午後</div><div class="time-grid">';
+  pm.forEach(s => { html += `<button class="time-btn" onclick="selectTime('${s}')">${s}</button>`; });
+  html += `</div><button class="back-link" onclick="goStep(1)">← 日付の選択に戻る</button>`;
+  el.innerHTML = html;
+}
+
+function selectTime(t) { state.time = t; state.step = 3; renderStep(); }
+
+function renderForm(el) {
+  const dept = DEPTS.find(d => d.id === state.dept);
+  el.innerHTML = `
+    <div class="booking-summary">
+      <div class="label">ご予約内容</div>
+      <div class="details"><span>📅 ${formatDate(state.date)}</span><span>🕐 ${state.time}</span></div>
+      <div class="dept-info">${dept.icon} ${dept.name}</div>
+    </div>
+    <div class="no-account-note">※ アカウント登録は不要です。以下の情報のみで予約できます。</div>
+    <div class="form-group">
+      <label>お名前<span class="required">*</span></label>
+      <input type="text" id="f-name" placeholder="山田 太郎" oninput="updateForm()">
+    </div>
+    <div class="form-group">
+      <label>電話番号<span class="required">*</span></label>
+      <input type="tel" id="f-phone" placeholder="090-1234-5678" oninput="updateForm()">
+    </div>
+    <div class="form-group">
+      <label>メールアドレス<span class="required">*</span></label>
+      <input type="email" id="f-email" placeholder="yamada@example.com" oninput="updateForm()">
+    </div>
+    <div class="form-group">
+      <label>症状・ご相談内容（任意）</label>
+      <textarea id="f-symptoms" rows="3" placeholder="例：頭痛が3日ほど続いています" oninput="updateForm()"></textarea>
+    </div>
+    <button class="submit-btn" id="submit-btn" disabled onclick="submitForm()">この内容で予約する</button>
+    <button class="back-link" style="width:100%;margin-top:12px" onclick="goStep(2)">← 時間の選択に戻る</button>`;
+}
+
+function updateForm() {
+  state.form.name = document.getElementById("f-name").value;
+  state.form.phone = document.getElementById("f-phone").value;
+  state.form.email = document.getElementById("f-email").value;
+  state.form.symptoms = document.getElementById("f-symptoms").value;
+  const btn = document.getElementById("submit-btn");
+  btn.disabled = !(state.form.name && state.form.phone && state.form.email);
+}
+
+function submitForm() {
+  const btn = document.getElementById("submit-btn");
+  btn.innerHTML = '<span class="loading">⏳</span> 予約を確定中...';
+  btn.disabled = true;
+  setTimeout(() => { state.step = 4; renderStep(); }, 1800);
+}
+
+function renderConfirm(el) {
+  const dept = DEPTS.find(d => d.id === state.dept);
+  const rid = "R-" + Math.floor(100000 + Math.random() * 900000);
+  el.innerHTML = `
+    <div class="confirm-page">
+      <div class="confirm-check">✓</div>
+      <div class="confirm-title">ご予約を承りました</div>
+      <div class="confirm-email">確認メールを ${state.form.email||"ご登録のアドレス"} に送信しました</div>
+      <div class="confirm-details">
+        <div class="header">予約内容</div>
+        <div class="confirm-row"><span class="key">予約番号</span><span class="val">${rid}</span></div>
+        <div class="confirm-row"><span class="key">診療科</span><span class="val">${dept.name}</span></div>
+        <div class="confirm-row"><span class="key">日時</span><span class="val">${formatDate(state.date)} ${state.time}</span></div>
+        <div class="confirm-row"><span class="key">お名前</span><span class="val">${state.form.name||"—"}</span></div>
+        <div class="confirm-row"><span class="key">電話番号</span><span class="val">${state.form.phone||"—"}</span></div>
+      </div>
+      <div class="confirm-warning">⚠️ キャンセル・変更はお電話（03-XXXX-XXXX）にてお願いいたします。</div>
+      <button class="confirm-close-btn" onclick="closeModal()">閉じる</button>
+    </div>`;
+}
+
+function goStep(s) { state.step = s; renderStep(); }
+</script>
+</body>
+</html>
